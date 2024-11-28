@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  gsap:
+    specifier: 3.5.1
+    version: 3.5.1
   three:
     specifier: ^0.170.0
     version: 0.170.0
@@ -419,6 +422,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /gsap@3.5.1:
+    resolution: {integrity: sha512-EMV0RSUKZNeTUzLKAizGlwxVOUyif3/g8I3S1aA/hf3gbqwBvmQ02x1RdTBQNQMOpHCVBv9y/vaHwfctoAg8zw==}
+    dev: false
 
   /nanoid@3.3.8:
     resolution: {integrity: sha512-WNLf5Sd8oZxOm+TzppcYk8gVOgP+l58xNy58D0nbUnOxOWRWvlcCV4kUF7ltmI6PsrLl/BgKEyS4mqsGChFN0w==}
