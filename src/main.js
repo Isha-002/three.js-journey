@@ -37,18 +37,40 @@ scene.add(mesh);
 // #Camera
 // 1. array => multiple render of the scene
 // 2. stereo => vr like effect
-// 3. cube => do 6 renders 
-// 4. orthographic => render scene without perspective (left, right, top, buttom, near, far ) * multiply left and right with aspect ratio 
+// 3. cube => do 6 renders
+// 4. orthographic => render scene without perspective (left, right, top, buttom, near, far ) * multiply left and right with aspect ratio
 // 5. perspective => natural camera with perspective (fov, aspect ratio, near, far)
 
+const sizes = { width: window.innerWidth, height: window.innerHeight };
+
+window.addEventListener('resize', () => {
+  // update sizes
+  sizes.width = window.innerWidth;
+  sizes.height = window.innerHeight;
+  // update camera
+  camera.aspect = sizes.width / sizes.height
+  camera.updateProjectionMatrix()
+  // update renderer
+  renderer.setSize(sizes.width, sizes.height);
+
+  // update pixel ratio for multiple monitor users
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+});
+
+// full screen
+window.addEventListener('dblclick', ()=>{
+  if(!document.fullscreenElement) {
+    canvas.requestFullscreen()
+  } else {
+    document.exitFullscreen()
+  }
+})
 
 
-const sizes = { width: 600, height: 800 };
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
 camera.position.x = 0;
 camera.position.y = 1;
-camera.position.z = 5;
-
+camera.position.z = 4;
 
 // *camera methods
 // camera.position.set()
@@ -64,12 +86,12 @@ document.body.appendChild(canvas);
 
 const renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(sizes.width, sizes.height);
-
-// #Orbit controls 
-const controls = new OrbitControls(camera, canvas)
-controls.enableDamping = true
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 
+// #Orbit controls
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
 
 let time = Date.now();
 
@@ -79,16 +101,15 @@ let time = Date.now();
 // gsap.to(mesh.position, { x: 2, duration: 2 })
 // gsap.to(mesh.position, { x: 0, duration: 2, delay: 3 })
 
-// #Cursor 
+// #Cursor
 const cursor = {
   x: 0,
-  y: 0
-}
+  y: 0,
+};
 window.addEventListener('mousemove', (event) => {
-  cursor.x = event.clientX / sizes.width - 0.5 // => fix value between -0.5 & 0.5
-  cursor.y = event.clientY / sizes.height - 0.5 // => fix value between -0.5 & 0.5
-  console.log(event.clientX, event.clientY)
-})
+  cursor.x = event.clientX / sizes.width - 0.5; // => fix value between -0.5 & 0.5
+  cursor.y = event.clientY / sizes.height - 0.5; // => fix value between -0.5 & 0.5
+});
 
 const tick = () => {
   // get delta time
@@ -113,5 +134,3 @@ const tick = () => {
 
 tick();
 // -----------------------------------------
-
-
