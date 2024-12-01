@@ -9,12 +9,40 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // #Scene
 const scene = new THREE.Scene();
 // -----------------------------------------
-//test
+
+const vertex_shader = `
+void main(){
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+const fragment_shader = `
+uniform vec2 u_mouse;
+uniform vec2 u_resolution;
+uniform vec3 u_color;
+uniform float u_time;
+void main(){
+
+  // vec3 color = vec3((sin(u_time) + 1.0) / 2.0, 0.0 , (cos(u_time) + 1.0) / 2.0);
+
+  vec2 uv = gl_FragCoord.xy/u_resolution;
+  vec3 color = mix(vec3(1.0,0.0,0.0), vec3(0.0,0.0,1.0), uv.y);
+  gl_FragColor = vec4(color, 1.0); 
+}
+`;
+
 // #Object
-const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial({
-  color: 'yellow',
-  wireframe: true,
+const uniforms = {
+  u_time: { value: 0.0 },
+  u_mouse: { value: { x: 0.0, y: 0.0 } },
+  u_resolution: { value: { x: window.innerWidth, y: window.innerHeight } },
+  u_color: { value: new THREE.Color(0xffaf00) },
+};
+
+const geometry = new THREE.PlaneGeometry(2, 2);
+const material = new THREE.ShaderMaterial({
+  uniforms: uniforms,
+  vertexShader: vertex_shader,
+  fragmentShader: fragment_shader,
 });
 const mesh = new THREE.Mesh(geometry, material);
 // mesh.position.normalize() => camera and obj distance = 1
@@ -48,29 +76,36 @@ window.addEventListener('resize', () => {
   sizes.width = window.innerWidth;
   sizes.height = window.innerHeight;
   // update camera
-  camera.aspect = sizes.width / sizes.height
-  camera.updateProjectionMatrix()
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
   // update renderer
   renderer.setSize(sizes.width, sizes.height);
 
   // update pixel ratio for multiple monitor users
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // uniform resolution update
+  if (uniforms.u_resolution !== undefined) {
+    uniforms.u_resolution.value.x = window.innerWidth;
+    uniforms.u_resolution.value.y = window.innerHeight;
+  }
 });
 
-// full screen
-window.addEventListener('dblclick', ()=>{
-  if(!document.fullscreenElement) {
-    canvas.requestFullscreen()
-  } else {
-    document.exitFullscreen()
-  }
-})
 
+
+// full screen
+window.addEventListener('dblclick', () => {
+  if (!document.fullscreenElement) {
+    canvas.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
 
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
 camera.position.x = 0;
-camera.position.y = 1;
-camera.position.z = 4;
+camera.position.y = 0;
+camera.position.z = 1.35;
 
 // *camera methods
 // camera.position.set()
@@ -86,14 +121,13 @@ document.body.appendChild(canvas);
 
 const renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // #Orbit controls
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 
-let time = Date.now();
+
 
 // -----------------------------------------
 
@@ -109,13 +143,26 @@ const cursor = {
 window.addEventListener('mousemove', (event) => {
   cursor.x = event.clientX / sizes.width - 0.5; // => fix value between -0.5 & 0.5
   cursor.y = event.clientY / sizes.height - 0.5; // => fix value between -0.5 & 0.5
+  // updating uniforms
+  uniforms.u_mouse.value.x = event.clientX
+  uniforms.u_mouse.value.y = event.clientY
 });
+window.addEventListener('touchmove', (event) => {
+  const touch = event.touches[0]; // Get the first touch point
+  uniforms.u_mouse.value.x = touch.clientX;
+  uniforms.u_mouse.value.y = touch.clientY;
+});
+
+// time
+let time = Date.now();
+const clock = new THREE.Clock({autoStart: true})
 
 const tick = () => {
   // get delta time
   const current_time = Date.now();
   const delta_time = current_time - time;
   time = current_time;
+  uniforms.u_time.value = clock.getElapsedTime()
 
   // camera looks at the obj
   // camera.position.x = cursor.x * -5
